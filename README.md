@@ -1,0 +1,1 @@
+# quarkus-expense-service
