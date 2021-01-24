@@ -1,9 +1,9 @@
 package org.acme.rest.json;
 
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
-import javax.transaction.Transactional;
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -20,37 +20,30 @@ import javax.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ExpenseResource {
+    @Inject
+    public ExpenseService expenseService;
 
     @GET
-    public List<Expense> list() {
-        return Expense.listAll();
+    public Set<Expense> list() {
+        return expenseService.list();
     }
 
     @POST
-    @Transactional
-    public Expense create(final Expense expense) {
-        Expense newExpense = Expense.of(expense.name, expense.paymentMethod, expense.amount.toString());
-        newExpense.persist();
-
-        return newExpense;
+    public Expense create(Expense expense) {
+        return expenseService.create(expense);
     }
 
     @DELETE
     @Path("{uuid}")
-    @Transactional
-    public List<Expense> delete(@PathParam("uuid") final UUID uuid) {
-        long numExpensesDeleted = Expense.delete("uuid", uuid);
-
-        if (numExpensesDeleted == 0) {
+    public Set<Expense> delete(@PathParam("uuid") UUID uuid) {
+        if (!expenseService.delete(uuid)) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
-
-        return Expense.listAll();
+        return expenseService.list();
     }
 
     @PUT
-    @Transactional
-    public void update(final Expense expense) {
-        Expense.update(expense);
+    public void update(Expense expense) {
+        expenseService.update(expense);
     }
 }
